@@ -1,10 +1,11 @@
+
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Send, Zap, Ghost, RefreshCw, Trash2, Rocket, Stars, Terminal, AlertTriangle, HelpCircle } from 'lucide-react';
-import WackyBackground from './components/WackyBackground';
-import { getWackyResponse } from './services/geminiService';
-import { WackyResponse, AnimationType } from './types';
-import { ANIMATION_VARIANTS } from './constants';
+import WackyBackground from './components/WackyBackground.tsx';
+import { getWackyResponse } from './services/geminiService.ts';
+import { WackyResponse, AnimationType } from './types.ts';
+import { ANIMATION_VARIANTS } from './constants.ts';
 
 const App: React.FC = () => {
   const [prompt, setPrompt] = useState('');
@@ -124,7 +125,7 @@ const App: React.FC = () => {
                        <Rocket className="w-5 h-5" /> MOAR NONSENSE!
                      </button>
                      <div className="bg-lime-400 text-black brutalist-border px-4 py-4 font-black flex items-center gap-2">
-                       ENTRY: {response.animation.toUpperCase()}
+                       ENTRY: {String(response.animation).toUpperCase()}
                      </div>
                    </div>
                 </div>

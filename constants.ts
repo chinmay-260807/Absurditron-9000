@@ -1,5 +1,5 @@
 
-import { AnimationType } from './types';
+import { AnimationType } from './types.ts';
 
 export const COLORS = [
   '#f43f5e', // rose-500
@@ -12,7 +12,7 @@ export const COLORS = [
 
 export const EMOJIS = ['🤡', '🤪', '🛸', '🍕', '🌈', '🧨', '🐙', '🦖', '🍌', '🍦', '🛸', '🧠', '🍄', '🧨'];
 
-export const ANIMATION_VARIANTS = {
+export const ANIMATION_VARIANTS: Record<string, any> = {
   [AnimationType.BOUNCE]: {
     initial: { y: 100, opacity: 0 },
     animate: { y: 0, opacity: 1 },

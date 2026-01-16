@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './App';
+import App from './App.tsx';
 
 // Polyfill for environments that might not have window.process set correctly in modules
 if (typeof (window as any).process === 'undefined') {

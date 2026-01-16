@@ -1,5 +1,6 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
-import { WackyResponse, AnimationType } from "../types";
+import { WackyResponse, AnimationType } from "../types.ts";
 
 // Safe API initialization
 const getApiKey = () => (window as any).process?.env?.API_KEY || "";
