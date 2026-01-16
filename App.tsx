@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, Trash2, Rocket, Send, AlertTriangle, HelpCircle } from 'lucide-react';
+import { Sparkles, Send, Zap, Ghost, RefreshCw, Trash2, Rocket, Stars, Terminal, AlertTriangle, HelpCircle } from 'lucide-react';
 import WackyBackground from './components/WackyBackground';
 import { getWackyResponse } from './services/geminiService';
 import { WackyResponse, AnimationType } from './types';
@@ -13,7 +13,6 @@ const App: React.FC = () => {
   const [isSuperWacky, setIsSuperWacky] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [history, setHistory] = useState<WackyResponse[]>([]);
-  const [hasError, setHasError] = useState(false);
   const lastAnimationRef = useRef<AnimationType | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -22,7 +21,6 @@ const App: React.FC = () => {
     if (!prompt.trim() || isLoading) return;
 
     setIsLoading(true);
-    setHasError(false);
     
     let currentWacky = isSuperWacky;
     if (!currentWacky && Math.random() > 0.85) {
@@ -38,15 +36,15 @@ const App: React.FC = () => {
       setHistory(prev => [result, ...prev].slice(0, 5));
       setPrompt('');
     } catch (err) {
-      console.error("Gemini Error:", err);
-      setHasError(true);
+      console.error(err);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col p-4 md:p-10 transition-all duration-500 overflow-hidden">
+    <div className="relative min-h-screen w-full flex flex-col p-4 md:p-10 transition-all duration-500">
+      {/* Background component handles the colors now */}
       <WackyBackground isSuperWacky={isSuperWacky} />
 
       {/* TOP NAV BAR */}
@@ -102,6 +100,7 @@ const App: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="grid grid-cols-1 md:grid-cols-12 gap-6 w-full"
               >
+                {/* EMOJI BOX */}
                 <div className="md:col-span-4 bg-white brutalist-border brutalist-shadow flex items-center justify-center p-10 h-64 md:h-auto overflow-hidden">
                   <motion.div 
                     className="text-[12rem] select-none"
@@ -111,6 +110,7 @@ const App: React.FC = () => {
                   </motion.div>
                 </div>
 
+                {/* TEXT BOX */}
                 <div className="md:col-span-8 bg-white brutalist-border brutalist-shadow p-10 flex flex-col justify-center gap-8 min-h-[300px]">
                    <motion.div {...ANIMATION_VARIANTS[response.animation]}>
                     <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-2">The Oracle Says:</p>
@@ -162,12 +162,6 @@ const App: React.FC = () => {
                       <span className="hidden md:inline">FEED</span>
                     </button>
                   </div>
-
-                  {hasError && (
-                    <div className="bg-red-500 text-white p-4 brutalist-border font-black">
-                      ERROR: THE VOID IS BUSY FILING ITS TAXES. TRY AGAIN?
-                    </div>
-                  )}
 
                   <div className="bg-black text-white p-6 brutalist-border flex flex-wrap gap-4 items-center">
                     <HelpCircle className="w-8 h-8 text-yellow-400" />
