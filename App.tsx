@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, RefreshCw, Trash2, Rocket, AlertTriangle, HelpCircle, XCircle } from 'lucide-react';
+import { Send, RefreshCw, Trash2, Rocket, AlertTriangle, HelpCircle, XCircle, Key, ExternalLink } from 'lucide-react';
 import WackyBackground from './components/WackyBackground.tsx';
 import { getWackyResponse } from './services/geminiService.ts';
 import { WackyResponse, AnimationType } from './types.ts';
@@ -12,7 +12,7 @@ const App: React.FC = () => {
   const [response, setResponse] = useState<WackyResponse | null>(null);
   const [isSuperWacky, setIsSuperWacky] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{message: string, code?: string} | null>(null);
   const [history, setHistory] = useState<WackyResponse[]>([]);
   const lastAnimationRef = useRef<AnimationType | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -24,22 +24,20 @@ const App: React.FC = () => {
     setIsLoading(true);
     setError(null);
     
-    let currentWacky = isSuperWacky;
-    if (!currentWacky && Math.random() > 0.85) {
-      currentWacky = true;
-      setIsSuperWacky(true);
-      setTimeout(() => setIsSuperWacky(false), 15000);
-    }
-
     try {
-      const result = await getWackyResponse(prompt, currentWacky, lastAnimationRef.current);
+      const result = await getWackyResponse(prompt, isSuperWacky, lastAnimationRef.current);
       lastAnimationRef.current = result.animation;
       setResponse(result);
       setHistory(prev => [result, ...prev].slice(0, 5));
       setPrompt('');
     } catch (err: any) {
       console.error("Submission error:", err);
-      setError(err.message || "The Void is currently undergoing scheduled maintenance.");
+      // Check for specific error code from our API
+      if (err.message?.includes('API_KEY_MISSING')) {
+        setError({ message: err.message, code: 'API_KEY_MISSING' });
+      } else {
+        setError({ message: err.message || "The Void is currently undergoing scheduled maintenance." });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -81,7 +79,34 @@ const App: React.FC = () => {
       <main className="z-10 flex-grow flex flex-col items-center justify-center max-w-5xl mx-auto w-full">
         <div className="relative w-full">
           <AnimatePresence mode="wait">
-            {error ? (
+            {error?.code === 'API_KEY_MISSING' ? (
+              <motion.div 
+                key="setup-error"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white brutalist-border brutalist-shadow p-8 md:p-12 text-center max-w-3xl mx-auto"
+              >
+                <div className="bg-yellow-400 brutalist-border inline-block p-4 mb-6">
+                  <Key className="w-12 h-12 text-black" />
+                </div>
+                <h2 className="text-4xl font-black uppercase mb-4">API Key Required</h2>
+                <p className="text-xl mb-8 font-medium">To run this app on Vercel, you must add your Gemini API Key to your project settings.</p>
+                
+                <div className="text-left bg-slate-100 p-6 brutalist-border mb-8 space-y-4 font-bold">
+                  <p>1. Go to <a href="https://aistudio.google.com/app/apikey" target="_blank" className="underline text-blue-600">Google AI Studio</a> to get a key.</p>
+                  <p>2. Open your project in the <a href="https://vercel.com" target="_blank" className="underline text-blue-600">Vercel Dashboard</a>.</p>
+                  <p>3. Settings &gt; Environment Variables &gt; Add <code className="bg-black text-white px-2">API_KEY</code>.</p>
+                  <p>4. Redeploy your site.</p>
+                </div>
+
+                <button 
+                  onClick={() => window.location.reload()}
+                  className="bg-black text-white brutalist-shadow-sm px-10 py-4 font-black hover:bg-slate-800 transition-all flex items-center gap-3 mx-auto"
+                >
+                  <RefreshCw className="w-6 h-6" /> I'VE ADDED IT, RECHECK!
+                </button>
+              </motion.div>
+            ) : error ? (
               <motion.div 
                 key="error"
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -92,7 +117,7 @@ const App: React.FC = () => {
                 <XCircle className="w-20 h-20 text-red-600 mx-auto mb-6" />
                 <h2 className="text-4xl font-black uppercase mb-4">Logic Engine Seizure</h2>
                 <div className="bg-slate-100 p-4 border-2 border-dashed border-black mb-8 font-mono text-left">
-                  <p className="text-red-600 font-bold">{error}</p>
+                  <p className="text-red-600 font-bold">{error.message}</p>
                 </div>
                 <button 
                   onClick={clearError}
@@ -117,7 +142,7 @@ const App: React.FC = () => {
                   <RefreshCw className="w-24 h-24 mb-6 stroke-[4]" />
                 </motion.div>
                 <h2 className="text-4xl font-black uppercase italic">Fracturing Reality...</h2>
-                <p className="mt-4 font-bold tracking-widest opacity-75">NEGOTIATING WITH THE VOID</p>
+                <p className="mt-4 font-bold tracking-widest opacity-75 uppercase">Negotiating with the algorithm</p>
               </motion.div>
             ) : response ? (
               <motion.div 

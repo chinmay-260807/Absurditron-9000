@@ -8,38 +8,43 @@ export default async function handler(req: any, res: any) {
 
   const { prompt, isSuperWacky, lastAnimation } = req.body;
 
-  if (!process.env.API_KEY) {
+  // Crucial: This checks the Vercel environment
+  const apiKey = process.env.API_KEY;
+
+  if (!apiKey || apiKey === "REPLACE_ME" || apiKey.length < 5) {
+    console.error("CRITICAL: API_KEY is missing or invalid in Vercel Environment Variables.");
     return res.status(500).json({ 
-      error: 'API Key missing on server. Please configure API_KEY in Vercel environment variables.' 
+      error: 'API_KEY_MISSING',
+      message: 'The Gemini API Key is missing from Vercel settings. Please add "API_KEY" to your Environment Variables.' 
     });
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const model = "gemini-3-flash-preview";
-
-  const wackyBias = isSuperWacky 
-    ? "SUPER WACKY MODE is active: go for absolute chaos. Use surreal, logic-breaking text and extreme animations." 
-    : "Be funny, surprising, and absurdist.";
-  
-  const avoidDuplicate = lastAnimation 
-    ? `IMPORTANT: The previous animation was '${lastAnimation}'. You MUST choose a DIFFERENT animation.` 
-    : "";
-
-  const contents = `Generate a wacky, nonsensical, and hilarious response to this prompt: "${prompt}". 
-    ${wackyBias}
-    
-    Animation Guide (Choose one):
-    - vortex, teleport, matrix, flip, kaleidoscope, warp, gravity, spiral, disco, rainbow, glitch, explode, float, bounce, jello, shake, swing, phase, rubber_band, tilt, squish, zigzag, poof.
-
-    ${avoidDuplicate}
-
-    Return it as a JSON object with:
-    - text: The funny response (1-2 short sentences)
-    - animation: One of the strings above.
-    - moodColor: A bright, vibrant hex color code.
-    - emoji: A single relevant quirky emoji.`;
-
   try {
+    const ai = new GoogleGenAI({ apiKey });
+    const model = "gemini-3-flash-preview";
+
+    const wackyBias = isSuperWacky 
+      ? "SUPER WACKY MODE is active: go for absolute chaos. Use surreal, logic-breaking text and extreme animations." 
+      : "Be funny, surprising, and absurdist.";
+    
+    const avoidDuplicate = lastAnimation 
+      ? `IMPORTANT: The previous animation was '${lastAnimation}'. You MUST choose a DIFFERENT animation.` 
+      : "";
+
+    const contents = `Generate a wacky, nonsensical, and hilarious response to this prompt: "${prompt}". 
+      ${wackyBias}
+      
+      Animation Guide (Choose one):
+      - vortex, teleport, matrix, flip, kaleidoscope, warp, gravity, spiral, disco, rainbow, glitch, explode, float, bounce, jello, shake, swing, phase, rubber_band, tilt, squish, zigzag, poof.
+
+      ${avoidDuplicate}
+
+      Return it as a JSON object with:
+      - text: The funny response (1-2 short sentences)
+      - animation: One of the strings above.
+      - moodColor: A bright, vibrant hex color code.
+      - emoji: A single relevant quirky emoji.`;
+
     const response = await ai.models.generateContent({
       model,
       contents,
@@ -62,6 +67,9 @@ export default async function handler(req: any, res: any) {
     res.status(200).json(data);
   } catch (error: any) {
     console.error("Gemini Backend Error:", error);
-    res.status(500).json({ error: error.message || 'Failed to generate response' });
+    res.status(500).json({ 
+      error: 'GENERATION_FAILED',
+      message: error.message || 'Failed to generate response' 
+    });
   }
 }
