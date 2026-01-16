@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Send, Zap, Ghost, RefreshCw, Trash2, Rocket, Stars, Terminal, AlertTriangle, HelpCircle } from 'lucide-react';
+import { Send, RefreshCw, Trash2, Rocket, AlertTriangle, HelpCircle, XCircle } from 'lucide-react';
 import WackyBackground from './components/WackyBackground.tsx';
 import { getWackyResponse } from './services/geminiService.ts';
 import { WackyResponse, AnimationType } from './types.ts';
@@ -12,6 +12,7 @@ const App: React.FC = () => {
   const [response, setResponse] = useState<WackyResponse | null>(null);
   const [isSuperWacky, setIsSuperWacky] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<WackyResponse[]>([]);
   const lastAnimationRef = useRef<AnimationType | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -21,6 +22,7 @@ const App: React.FC = () => {
     if (!prompt.trim() || isLoading) return;
 
     setIsLoading(true);
+    setError(null);
     
     let currentWacky = isSuperWacky;
     if (!currentWacky && Math.random() > 0.85) {
@@ -35,11 +37,17 @@ const App: React.FC = () => {
       setResponse(result);
       setHistory(prev => [result, ...prev].slice(0, 5));
       setPrompt('');
-    } catch (err) {
-      console.error("Failed to fetch wacky response:", err);
+    } catch (err: any) {
+      console.error("Submission error:", err);
+      setError(err.message || "The Void is currently undergoing scheduled maintenance.");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const clearError = () => {
+    setError(null);
+    setIsLoading(false);
   };
 
   return (
@@ -73,7 +81,27 @@ const App: React.FC = () => {
       <main className="z-10 flex-grow flex flex-col items-center justify-center max-w-5xl mx-auto w-full">
         <div className="relative w-full">
           <AnimatePresence mode="wait">
-            {isLoading ? (
+            {error ? (
+              <motion.div 
+                key="error"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.1 }}
+                className="bg-white brutalist-border brutalist-shadow p-10 text-center max-w-2xl mx-auto"
+              >
+                <XCircle className="w-20 h-20 text-red-600 mx-auto mb-6" />
+                <h2 className="text-4xl font-black uppercase mb-4">Logic Engine Seizure</h2>
+                <div className="bg-slate-100 p-4 border-2 border-dashed border-black mb-8 font-mono text-left">
+                  <p className="text-red-600 font-bold">{error}</p>
+                </div>
+                <button 
+                  onClick={clearError}
+                  className="bg-black text-white brutalist-shadow-sm px-10 py-4 font-black hover:bg-slate-800 transition-all flex items-center gap-3 mx-auto"
+                >
+                  <RefreshCw className="w-6 h-6" /> REBOOT LOGIC
+                </button>
+              </motion.div>
+            ) : isLoading ? (
               <motion.div 
                 key="loading"
                 initial={{ rotate: 10, scale: 0.8, opacity: 0 }}
@@ -83,12 +111,13 @@ const App: React.FC = () => {
               >
                 <motion.div
                   animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
                   className="inline-block"
                 >
                   <RefreshCw className="w-24 h-24 mb-6 stroke-[4]" />
                 </motion.div>
-                <h2 className="text-4xl font-black uppercase italic">Fracturing Logic...</h2>
+                <h2 className="text-4xl font-black uppercase italic">Fracturing Reality...</h2>
+                <p className="mt-4 font-bold tracking-widest opacity-75">NEGOTIATING WITH THE VOID</p>
               </motion.div>
             ) : response ? (
               <motion.div 
@@ -108,7 +137,7 @@ const App: React.FC = () => {
 
                 <div className="md:col-span-8 bg-white brutalist-border brutalist-shadow p-10 flex flex-col justify-center gap-8 min-h-[300px]">
                    <motion.div {...ANIMATION_VARIANTS[response.animation]}>
-                    <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-2">The Oracle Says:</p>
+                    <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-2">The Oracle Proclaims:</p>
                     <h3 
                       className="text-4xl md:text-6xl font-black leading-tight italic"
                       style={{ color: response.moodColor }}
@@ -120,12 +149,12 @@ const App: React.FC = () => {
                    <div className="flex flex-wrap gap-4 mt-auto">
                      <button 
                        onClick={() => setResponse(null)}
-                       className="bg-black text-white brutalist-shadow-sm brutalist-border-none px-8 py-4 font-black hover:bg-slate-800 transition-transform active:translate-y-1 flex items-center gap-3"
+                       className="bg-black text-white brutalist-shadow-sm brutalist-border px-8 py-4 font-black hover:bg-slate-800 transition-transform active:translate-y-1 flex items-center gap-3"
                      >
-                       <Rocket className="w-5 h-5" /> MOAR NONSENSE!
+                       <Rocket className="w-5 h-5" /> MOAR CHAOS!
                      </button>
                      <div className="bg-lime-400 text-black brutalist-border px-4 py-4 font-black flex items-center gap-2">
-                       ENTRY: {String(response.animation).toUpperCase()}
+                       ANIM: {String(response.animation).toUpperCase()}
                      </div>
                    </div>
                 </div>
@@ -145,7 +174,7 @@ const App: React.FC = () => {
                       type="text"
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
-                      placeholder="Ask the Void something absurd..."
+                      placeholder="Input nonsense here..."
                       className="w-full bg-white text-black text-3xl md:text-5xl font-black p-10 brutalist-border brutalist-shadow focus:outline-none focus:ring-8 focus:ring-black/10 transition-all placeholder:text-slate-300"
                     />
                     <button
@@ -154,18 +183,18 @@ const App: React.FC = () => {
                       className="absolute right-4 top-4 bottom-4 bg-pink-500 text-white brutalist-border brutalist-shadow-sm px-10 hover:bg-pink-400 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none transition-all font-black text-2xl flex items-center gap-3"
                     >
                       <Send className="w-8 h-8" />
-                      <span className="hidden md:inline">FEED</span>
+                      <span className="hidden md:inline">GO</span>
                     </button>
                   </div>
 
                   <div className="bg-black text-white p-6 brutalist-border flex flex-wrap gap-4 items-center">
                     <HelpCircle className="w-8 h-8 text-yellow-400" />
-                    <span className="font-bold text-lg mr-4 uppercase">Prompt Starters:</span>
+                    <span className="font-bold text-lg mr-4 uppercase">Prompt Ideas:</span>
                     {[
-                      'Why is my toast plotting against me?', 
-                      'Describe the smell of a Tuesday', 
-                      'Synthetic recipe for an invisible dog',
-                      'What is the square root of a kangaroo?'
+                      'Why is my shadow lagging?', 
+                      'Synthetic flavor for Wednesday', 
+                      'How to boil a ghost',
+                      'Tax benefits of owning a portal'
                     ].map((suggest) => (
                       <button
                         key={suggest}
@@ -174,7 +203,7 @@ const App: React.FC = () => {
                           setPrompt(suggest);
                           inputRef.current?.focus();
                         }}
-                        className="bg-white text-black px-4 py-2 brutalist-border-none font-bold text-xs hover:bg-cyan-400 transition-colors"
+                        className="bg-white text-black px-4 py-2 brutalist-border font-bold text-xs hover:bg-cyan-400 transition-colors"
                       >
                         {suggest}
                       </button>
@@ -192,7 +221,7 @@ const App: React.FC = () => {
           <AnimatePresence>
             {history.map((item, idx) => (
               <motion.div 
-                key={idx}
+                key={`${item.text}-${idx}`}
                 initial={{ rotate: idx % 2 === 0 ? -10 : 10, y: 50, opacity: 0 }}
                 animate={{ rotate: idx % 2 === 0 ? -5 : 5, y: 0, opacity: 1 }}
                 whileHover={{ rotate: 0, scale: 1.1, zIndex: 50 }}
