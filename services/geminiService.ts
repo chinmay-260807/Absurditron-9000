@@ -1,21 +1,22 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { WackyResponse, AnimationType } from "../types.ts";
-
-// Safe API initialization
-const getApiKey = () => (window as any).process?.env?.API_KEY || "";
 
 export const getWackyResponse = async (
   prompt: string, 
   isSuperWacky: boolean, 
   lastAnimation?: AnimationType
 ): Promise<WackyResponse> => {
-  const apiKey = getApiKey();
-  const ai = new GoogleGenAI({ apiKey });
+  // Initialize AI client using the mandatory environment variable
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const model = "gemini-3-flash-preview";
   
-  const wackyBias = isSuperWacky ? "SUPER WACKY MODE is active: go for absolute chaos. Use surreal, logic-breaking text and extreme animations." : "Be funny, surprising, and absurdist.";
-  const avoidDuplicate = lastAnimation ? `IMPORTANT: The previous animation was '${lastAnimation}'. You MUST choose a DIFFERENT animation.` : "";
+  const wackyBias = isSuperWacky 
+    ? "SUPER WACKY MODE is active: go for absolute chaos. Use surreal, logic-breaking text and extreme animations." 
+    : "Be funny, surprising, and absurdist.";
+  
+  const avoidDuplicate = lastAnimation 
+    ? `IMPORTANT: The previous animation was '${lastAnimation}'. You MUST choose a DIFFERENT animation.` 
+    : "";
 
   const contents = `Generate a wacky, nonsensical, and hilarious response to this prompt: "${prompt}". 
     ${wackyBias}
@@ -40,17 +41,31 @@ export const getWackyResponse = async (
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            text: { type: Type.STRING },
-            animation: { type: Type.STRING },
-            moodColor: { type: Type.STRING },
-            emoji: { type: Type.STRING },
+            text: { 
+              type: Type.STRING,
+              description: "A wacky 1-2 sentence response."
+            },
+            animation: { 
+              type: Type.STRING,
+              description: "The name of the animation to trigger."
+            },
+            moodColor: { 
+              type: Type.STRING,
+              description: "A vibrant hex color."
+            },
+            emoji: { 
+              type: Type.STRING,
+              description: "A single relevant emoji."
+            },
           },
           required: ["text", "animation", "moodColor", "emoji"]
         }
       }
     });
 
-    const data = JSON.parse(response.text);
+    const jsonStr = response.text.trim();
+    const data = JSON.parse(jsonStr);
+    
     let selectedAnim = data.animation as AnimationType;
     const allAnims = Object.values(AnimationType);
     
@@ -65,9 +80,10 @@ export const getWackyResponse = async (
       emoji: data.emoji
     };
   } catch (e) {
-    console.error("Gemini Error:", e);
+    console.error("Gemini API Error:", e);
+    // Graceful fallback for the Absurditron experience
     return {
-      text: "The logic engine has encountered a sentient kumquat!",
+      text: "The logic engine has encountered a sentient kumquat and is currently negotiating a peace treaty!",
       animation: AnimationType.VORTEX,
       moodColor: "#ff00ff",
       emoji: "🍊"
