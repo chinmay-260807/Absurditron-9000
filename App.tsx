@@ -1,11 +1,10 @@
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Send, Zap, Ghost, RefreshCw, Trash2, Rocket, Stars, Terminal, AlertTriangle, HelpCircle } from 'lucide-react';
-import WackyBackground from './components/WackyBackground';
-import { getWackyResponse } from './services/geminiService';
-import { WackyResponse, AnimationType } from './types';
-import { ANIMATION_VARIANTS } from './constants';
+import WackyBackground from './components/WackyBackground.tsx';
+import { getWackyResponse } from './services/geminiService.ts';
+import { WackyResponse, AnimationType } from './types.ts';
+import { ANIMATION_VARIANTS } from './constants.ts';
 
 const App: React.FC = () => {
   const [prompt, setPrompt] = useState('');
@@ -36,18 +35,16 @@ const App: React.FC = () => {
       setHistory(prev => [result, ...prev].slice(0, 5));
       setPrompt('');
     } catch (err) {
-      console.error(err);
+      console.error("Failed to fetch wacky response:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col p-4 md:p-10 transition-all duration-500">
-      {/* Background component handles the colors now */}
+    <div className="relative min-h-screen w-full flex flex-col p-4 md:p-10 transition-all duration-500 overflow-hidden">
       <WackyBackground isSuperWacky={isSuperWacky} />
 
-      {/* TOP NAV BAR */}
       <header className="z-10 flex flex-col md:flex-row justify-between items-center gap-6 mb-12">
         <motion.div 
           animate={{ rotate: isSuperWacky ? [-2, 2, -2] : -2 }}
@@ -72,7 +69,6 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* MAIN CONTENT AREA */}
       <main className="z-10 flex-grow flex flex-col items-center justify-center max-w-5xl mx-auto w-full">
         <div className="relative w-full">
           <AnimatePresence mode="wait">
@@ -100,7 +96,6 @@ const App: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="grid grid-cols-1 md:grid-cols-12 gap-6 w-full"
               >
-                {/* EMOJI BOX */}
                 <div className="md:col-span-4 bg-white brutalist-border brutalist-shadow flex items-center justify-center p-10 h-64 md:h-auto overflow-hidden">
                   <motion.div 
                     className="text-[12rem] select-none"
@@ -110,7 +105,6 @@ const App: React.FC = () => {
                   </motion.div>
                 </div>
 
-                {/* TEXT BOX */}
                 <div className="md:col-span-8 bg-white brutalist-border brutalist-shadow p-10 flex flex-col justify-center gap-8 min-h-[300px]">
                    <motion.div {...ANIMATION_VARIANTS[response.animation]}>
                     <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-2">The Oracle Says:</p>
@@ -192,7 +186,6 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* HISTORY POLAROIDS */}
       <footer className="z-10 mt-12 overflow-x-auto pb-10 scrollbar-hide">
         <div className="flex gap-8 px-4">
           <AnimatePresence>
@@ -229,21 +222,19 @@ const App: React.FC = () => {
         </div>
       </footer>
 
-      {/* MARQUEE OVERLAY IN SUPER WACKY MODE */}
       {isSuperWacky && (
-        <div className="fixed top-0 left-0 w-full z-[100] bg-black text-yellow-400 overflow-hidden brutalist-border border-l-0 border-r-0 border-t-0">
-          <div className="marquee py-2 font-black text-xl uppercase italic">
-            Reality check failed // Chaos protocol engaged // The universe is a taco // Please do not adjust your sanity //
+        <>
+          <div className="fixed top-0 left-0 w-full z-[100] bg-black text-yellow-400 overflow-hidden brutalist-border border-l-0 border-r-0 border-t-0">
+            <div className="marquee py-2 font-black text-xl uppercase italic">
+              Reality check failed // Chaos protocol engaged // The universe is a taco // Please do not adjust your sanity //
+            </div>
           </div>
-        </div>
-      )}
-      
-      {isSuperWacky && (
-        <div className="fixed bottom-0 left-0 w-full z-[100] bg-black text-cyan-400 overflow-hidden brutalist-border border-l-0 border-r-0 border-b-0">
-          <div className="marquee py-2 font-black text-xl uppercase italic" style={{ animationDirection: 'reverse' }}>
-            Logic is a prison // Free your pancakes // Gravity is just an opinion // Time is a flat donut //
+          <div className="fixed bottom-0 left-0 w-full z-[100] bg-black text-cyan-400 overflow-hidden brutalist-border border-l-0 border-r-0 border-b-0">
+            <div className="marquee py-2 font-black text-xl uppercase italic" style={{ animationDirection: 'reverse' }}>
+              Logic is a prison // Free your pancakes // Gravity is just an opinion // Time is a flat donut //
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
