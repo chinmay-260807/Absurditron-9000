@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Send, Zap, Ghost, RefreshCw, Trash2, Rocket, Stars, Terminal, AlertTriangle, HelpCircle } from 'lucide-react';
-import WackyBackground from './components/WackyBackground.tsx';
-import { getWackyResponse } from './services/geminiService.ts';
-import { WackyResponse, AnimationType } from './types.ts';
-import { ANIMATION_VARIANTS } from './constants.ts';
+import WackyBackground from './components/WackyBackground';
+import { getWackyResponse } from './services/geminiService';
+import { WackyResponse, AnimationType } from './types';
+import { ANIMATION_VARIANTS } from './constants';
 
 const App: React.FC = () => {
   const [prompt, setPrompt] = useState('');

@@ -34,8 +34,12 @@
       }
     </style>
     <script>
-      // Shim process.env for browser compatibility
-      window.process = { env: { API_KEY: "" } };
+      // Define process.env globally before modules load
+      window.process = { 
+        env: { 
+          API_KEY: "" 
+        } 
+      };
     </script>
     <script type="importmap">
     {
