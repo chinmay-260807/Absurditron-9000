@@ -1,11 +1,11 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, RefreshCw, Trash2, Rocket, AlertTriangle, HelpCircle, XCircle, Key, ExternalLink } from 'lucide-react';
+import { Send, RefreshCw, Trash2, Rocket, AlertTriangle, HelpCircle, XCircle, Dices } from 'lucide-react';
 import WackyBackground from './components/WackyBackground.tsx';
 import { getWackyResponse } from './services/geminiService.ts';
 import { WackyResponse, AnimationType } from './types.ts';
-import { ANIMATION_VARIANTS } from './constants.ts';
+import { ANIMATION_VARIANTS, PROMPT_SUGGESTIONS } from './constants.ts';
 
 const App: React.FC = () => {
   const [prompt, setPrompt] = useState('');
@@ -32,20 +32,30 @@ const App: React.FC = () => {
       setPrompt('');
     } catch (err: any) {
       console.error("Submission error:", err);
-      // Check for specific error code from our API
-      if (err.message?.includes('API_KEY_MISSING')) {
-        setError({ message: err.message, code: 'API_KEY_MISSING' });
-      } else {
-        setError({ message: err.message || "The Void is currently undergoing scheduled maintenance." });
-      }
+      setError({ message: err.message || "The Void is currently undergoing scheduled maintenance." });
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleRandomize = () => {
+    const otherSuggestions = PROMPT_SUGGESTIONS.filter(s => s !== prompt);
+    const randomPrompt = otherSuggestions[Math.floor(Math.random() * otherSuggestions.length)];
+    setPrompt(randomPrompt);
+    inputRef.current?.focus();
+  };
+
   const clearError = () => {
     setError(null);
     setIsLoading(false);
+  };
+
+  // Enhanced subtle pop effect for response cards
+  const cardHoverEffect = {
+    scale: 1.02,
+    y: -5,
+    boxShadow: "16px 16px 0px 0px rgba(0,0,0,1)",
+    transition: { type: 'spring' as const, stiffness: 400, damping: 17 }
   };
 
   return (
@@ -79,34 +89,7 @@ const App: React.FC = () => {
       <main className="z-10 flex-grow flex flex-col items-center justify-center max-w-5xl mx-auto w-full">
         <div className="relative w-full">
           <AnimatePresence mode="wait">
-            {error?.code === 'API_KEY_MISSING' ? (
-              <motion.div 
-                key="setup-error"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-white brutalist-border brutalist-shadow p-8 md:p-12 text-center max-w-3xl mx-auto"
-              >
-                <div className="bg-yellow-400 brutalist-border inline-block p-4 mb-6">
-                  <Key className="w-12 h-12 text-black" />
-                </div>
-                <h2 className="text-4xl font-black uppercase mb-4">API Key Required</h2>
-                <p className="text-xl mb-8 font-medium">To run this app on Vercel, you must add your Gemini API Key to your project settings.</p>
-                
-                <div className="text-left bg-slate-100 p-6 brutalist-border mb-8 space-y-4 font-bold">
-                  <p>1. Go to <a href="https://aistudio.google.com/app/apikey" target="_blank" className="underline text-blue-600">Google AI Studio</a> to get a key.</p>
-                  <p>2. Open your project in the <a href="https://vercel.com" target="_blank" className="underline text-blue-600">Vercel Dashboard</a>.</p>
-                  <p>3. Settings &gt; Environment Variables &gt; Add <code className="bg-black text-white px-2">API_KEY</code>.</p>
-                  <p>4. Redeploy your site.</p>
-                </div>
-
-                <button 
-                  onClick={() => window.location.reload()}
-                  className="bg-black text-white brutalist-shadow-sm px-10 py-4 font-black hover:bg-slate-800 transition-all flex items-center gap-3 mx-auto"
-                >
-                  <RefreshCw className="w-6 h-6" /> I'VE ADDED IT, RECHECK!
-                </button>
-              </motion.div>
-            ) : error ? (
+            {error ? (
               <motion.div 
                 key="error"
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -151,16 +134,24 @@ const App: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="grid grid-cols-1 md:grid-cols-12 gap-6 w-full"
               >
-                <div className="md:col-span-4 bg-white brutalist-border brutalist-shadow flex items-center justify-center p-10 h-64 md:h-auto overflow-hidden">
+                {/* Emoji Card with Hover Effect */}
+                <motion.div 
+                  whileHover={cardHoverEffect}
+                  className="md:col-span-4 bg-white brutalist-border brutalist-shadow flex items-center justify-center p-10 h-64 md:h-auto overflow-hidden cursor-default"
+                >
                   <motion.div 
                     className="text-[12rem] select-none"
                     {...ANIMATION_VARIANTS[response.animation]}
                   >
                     {response.emoji}
                   </motion.div>
-                </div>
+                </motion.div>
 
-                <div className="md:col-span-8 bg-white brutalist-border brutalist-shadow p-10 flex flex-col justify-center gap-8 min-h-[300px]">
+                {/* Text Response Card with Hover Effect */}
+                <motion.div 
+                  whileHover={cardHoverEffect}
+                  className="md:col-span-8 bg-white brutalist-border brutalist-shadow p-10 flex flex-col justify-center gap-8 min-h-[300px] cursor-default"
+                >
                    <motion.div {...ANIMATION_VARIANTS[response.animation]}>
                     <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-2">The Oracle Proclaims:</p>
                     <h3 
@@ -182,7 +173,7 @@ const App: React.FC = () => {
                        ANIM: {String(response.animation).toUpperCase()}
                      </div>
                    </div>
-                </div>
+                </motion.div>
               </motion.div>
             ) : (
               <motion.div 
@@ -215,12 +206,16 @@ const App: React.FC = () => {
                   <div className="bg-black text-white p-6 brutalist-border flex flex-wrap gap-4 items-center">
                     <HelpCircle className="w-8 h-8 text-yellow-400" />
                     <span className="font-bold text-lg mr-4 uppercase">Prompt Ideas:</span>
-                    {[
-                      'Why is my shadow lagging?', 
-                      'Synthetic flavor for Wednesday', 
-                      'How to boil a ghost',
-                      'Tax benefits of owning a portal'
-                    ].map((suggest) => (
+                    
+                    <button
+                      type="button"
+                      onClick={handleRandomize}
+                      className="bg-yellow-400 text-black px-4 py-2 brutalist-border brutalist-shadow-sm font-black text-xs hover:bg-yellow-300 transition-all flex items-center gap-2 mr-2"
+                    >
+                      <Dices className="w-4 h-4" /> RANDOMIZE
+                    </button>
+
+                    {PROMPT_SUGGESTIONS.map((suggest) => (
                       <button
                         key={suggest}
                         type="button"
@@ -242,38 +237,47 @@ const App: React.FC = () => {
       </main>
 
       <footer className="z-10 mt-12 overflow-x-auto pb-10 scrollbar-hide">
-        <div className="flex gap-8 px-4">
+        <div className="flex gap-8 px-4 items-center">
           <AnimatePresence>
-            {history.map((item, idx) => (
-              <motion.div 
-                key={`${item.text}-${idx}`}
-                initial={{ rotate: idx % 2 === 0 ? -10 : 10, y: 50, opacity: 0 }}
-                animate={{ rotate: idx % 2 === 0 ? -5 : 5, y: 0, opacity: 1 }}
-                whileHover={{ rotate: 0, scale: 1.1, zIndex: 50 }}
-                className="bg-white brutalist-border brutalist-shadow-sm p-3 w-40 flex-shrink-0 cursor-pointer group"
-                onClick={() => {
-                  setResponse(item);
-                  lastAnimationRef.current = item.animation;
-                }}
+            {history.length > 0 && (
+              <motion.button 
+                initial={{ x: -50, opacity: 0, rotate: -15 }}
+                animate={{ x: 0, opacity: 1, rotate: 0 }}
+                exit={{ scale: 0, opacity: 0, rotate: 45 }}
+                whileHover={{ scale: 1.05, rotate: -2 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setHistory([])}
+                className="bg-red-600 text-white brutalist-border brutalist-shadow-sm px-6 py-4 font-black text-sm uppercase hover:bg-red-500 transition-colors flex items-center gap-3 flex-shrink-0 z-20"
               >
-                <div className="bg-slate-100 aspect-square mb-3 flex items-center justify-center text-5xl group-hover:bg-cyan-100 transition-colors">
-                  {item.emoji}
-                </div>
-                <p className="text-[10px] text-black font-black uppercase italic truncate border-t border-black pt-2">
-                  {item.text}
-                </p>
-              </motion.div>
-            ))}
+                <Trash2 className="w-5 h-5" /> CLEAR HISTORY
+              </motion.button>
+            )}
           </AnimatePresence>
-          
-          {history.length > 0 && (
-            <button 
-              onClick={() => setHistory([])}
-              className="bg-red-600 text-white brutalist-border brutalist-shadow-sm w-16 flex items-center justify-center flex-shrink-0 hover:bg-red-500 transition-colors"
-            >
-              <Trash2 className="w-6 h-6" />
-            </button>
-          )}
+
+          <div className="flex gap-8">
+            <AnimatePresence>
+              {history.map((item, idx) => (
+                <motion.div 
+                  key={`${item.text}-${idx}`}
+                  initial={{ rotate: idx % 2 === 0 ? -10 : 10, y: 50, opacity: 0 }}
+                  animate={{ rotate: idx % 2 === 0 ? -5 : 5, y: 0, opacity: 1 }}
+                  whileHover={{ rotate: 0, scale: 1.1, zIndex: 50 }}
+                  className="bg-white brutalist-border brutalist-shadow-sm p-3 w-40 flex-shrink-0 cursor-pointer group"
+                  onClick={() => {
+                    setResponse(item);
+                    lastAnimationRef.current = item.animation;
+                  }}
+                >
+                  <div className="bg-slate-100 aspect-square mb-3 flex items-center justify-center text-5xl group-hover:bg-cyan-100 transition-colors">
+                    {item.emoji}
+                  </div>
+                  <p className="text-[10px] text-black font-black uppercase italic truncate border-t border-black pt-2">
+                    {item.text}
+                  </p>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
         </div>
       </footer>
 

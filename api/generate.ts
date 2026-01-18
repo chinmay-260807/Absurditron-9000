@@ -8,62 +8,65 @@ export default async function handler(req: any, res: any) {
 
   const { prompt, isSuperWacky, lastAnimation } = req.body;
 
-  // Crucial: This checks the Vercel environment
-  const apiKey = process.env.API_KEY;
-
-  if (!apiKey || apiKey === "REPLACE_ME" || apiKey.length < 5) {
-    console.error("CRITICAL: API_KEY is missing or invalid in Vercel Environment Variables.");
-    return res.status(500).json({ 
-      error: 'API_KEY_MISSING',
-      message: 'The Gemini API Key is missing from Vercel settings. Please add "API_KEY" to your Environment Variables.' 
-    });
-  }
-
   try {
-    const ai = new GoogleGenAI({ apiKey });
-    const model = "gemini-3-flash-preview";
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const model = 'gemini-3-flash-preview';
 
     const wackyBias = isSuperWacky 
-      ? "SUPER WACKY MODE is active: go for absolute chaos. Use surreal, logic-breaking text and extreme animations." 
+      ? "SUPER WACKY MODE is active: go for absolute chaos. Use surreal, logic-breaking text, bizarre non-sequiturs, and choose from high-intensity 'CHAOS' animations. Be extremely unpredictable." 
       : "Be funny, surprising, and absurdist.";
     
     const avoidDuplicate = lastAnimation 
-      ? `IMPORTANT: The previous animation was '${lastAnimation}'. You MUST choose a DIFFERENT animation.` 
+      ? `IMPORTANT: The previous animation was '${lastAnimation}'. You MUST choose a DIFFERENT animation for variety.` 
       : "";
 
-    const contents = `Generate a wacky, nonsensical, and hilarious response to this prompt: "${prompt}". 
+    // Moving system-level instructions to systemInstruction config.
+    const systemInstruction = `You are the logic engine of the Absurditron 9000. 
+      Generate wacky, nonsensical, and hilarious responses to user prompts. 
+      The goal is pure entertainment through absurdity.
+      
       ${wackyBias}
       
-      Animation Guide (Choose one):
-      - vortex, teleport, matrix, flip, kaleidoscope, warp, gravity, spiral, disco, rainbow, glitch, explode, float, bounce, jello, shake, swing, phase, rubber_band, tilt, squish, zigzag, poof.
+      Animation Categories:
+      - CHAOS (High Intensity): vortex, glitch, explode, kaleidoscope, warp, disco, zigzag, rainbow, spiral, teleport, jello, rubber_band, poof, spin.
+      - STABLE (Low Intensity): float, bounce, shake, swing, phase, matrix, flip, tilt, squish, gravity.
 
-      ${avoidDuplicate}
-
-      Return it as a JSON object with:
-      - text: The funny response (1-2 short sentences)
-      - animation: One of the strings above.
-      - moodColor: A bright, vibrant hex color code.
-      - emoji: A single relevant quirky emoji.`;
+      Choose exactly one animation name from the list above.
+      ${avoidDuplicate}`;
 
     const response = await ai.models.generateContent({
       model,
-      contents,
+      contents: `User Prompt: "${prompt}"`,
       config: {
+        systemInstruction,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            text: { type: Type.STRING },
-            animation: { type: Type.STRING },
-            moodColor: { type: Type.STRING },
-            emoji: { type: Type.STRING },
+            text: { 
+              type: Type.STRING, 
+              description: "A short, hilarious, and wacky response to the prompt." 
+            },
+            animation: { 
+              type: Type.STRING, 
+              description: "One specific animation name from the provided categories." 
+            },
+            moodColor: { 
+              type: Type.STRING, 
+              description: "A bright hex color code representing the vibe." 
+            },
+            emoji: { 
+              type: Type.STRING, 
+              description: "A single, quirky, relevant emoji." 
+            },
           },
           required: ["text", "animation", "moodColor", "emoji"]
         }
       }
     });
 
-    const data = JSON.parse(response.text);
+    const jsonStr = response.text?.trim() || "{}";
+    const data = JSON.parse(jsonStr);
     res.status(200).json(data);
   } catch (error: any) {
     console.error("Gemini Backend Error:", error);

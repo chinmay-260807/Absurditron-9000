@@ -12,6 +12,19 @@ export const COLORS = [
 
 export const EMOJIS = ['🤡', '🤪', '🛸', '🍕', '🌈', '🧨', '🐙', '🦖', '🍌', '🍦', '🛸', '🧠', '🍄', '🧨'];
 
+export const PROMPT_SUGGESTIONS = [
+  'Why is my shadow lagging?', 
+  'Synthetic flavor for Wednesday', 
+  'How to boil a ghost',
+  'Tax benefits of owning a portal',
+  'Do robots dream of electric guacamole?',
+  'Why is the moon following me?',
+  'Convert my cat into a PDF',
+  'Is cereal a soup or a wet salad?',
+  'The frequency of a purple smell',
+  'Manual for a gravity-free toaster'
+];
+
 export const ANIMATION_VARIANTS: Record<string, any> = {
   [AnimationType.BOUNCE]: {
     initial: { y: 100, opacity: 0 },
