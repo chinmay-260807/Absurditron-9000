@@ -8,8 +8,16 @@ export default async function handler(req: any, res: any) {
 
   const { prompt, isSuperWacky, lastAnimation } = req.body;
 
+  if (!process.env.API_KEY) {
+    return res.status(500).json({ 
+      error: 'CONFIG_ERROR', 
+      message: 'API_KEY environment variable is missing in Vercel settings.' 
+    });
+  }
+
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    // Using gemini-3-flash-preview as per standard text task guidelines
     const model = 'gemini-3-flash-preview';
 
     const wackyBias = isSuperWacky 
@@ -20,7 +28,6 @@ export default async function handler(req: any, res: any) {
       ? `IMPORTANT: The previous animation was '${lastAnimation}'. You MUST choose a DIFFERENT animation for variety.` 
       : "";
 
-    // Moving system-level instructions to systemInstruction config.
     const systemInstruction = `You are the logic engine of the Absurditron 9000. 
       Generate wacky, nonsensical, and hilarious responses to user prompts. 
       The goal is pure entertainment through absurdity.
@@ -65,7 +72,11 @@ export default async function handler(req: any, res: any) {
       }
     });
 
-    const jsonStr = response.text?.trim() || "{}";
+    if (!response || !response.text) {
+      throw new Error("Empty response from AI engine. It might have been blocked by safety filters.");
+    }
+
+    const jsonStr = response.text.trim();
     const data = JSON.parse(jsonStr);
     res.status(200).json(data);
   } catch (error: any) {
