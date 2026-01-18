@@ -8,16 +8,16 @@ export default async function handler(req: any, res: any) {
 
   const { prompt, isSuperWacky, lastAnimation } = req.body;
 
+  // Verify the API key exists
   if (!process.env.API_KEY) {
     return res.status(500).json({ 
       error: 'CONFIG_ERROR', 
-      message: 'API_KEY environment variable is missing in Vercel settings.' 
+      message: 'CRITICAL: API_KEY is missing. Please add it to your Vercel Environment Variables.' 
     });
   }
 
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    // Using gemini-3-flash-preview as per standard text task guidelines
     const model = 'gemini-3-flash-preview';
 
     const wackyBias = isSuperWacky 
@@ -72,18 +72,23 @@ export default async function handler(req: any, res: any) {
       }
     });
 
-    if (!response || !response.text) {
-      throw new Error("Empty response from AI engine. It might have been blocked by safety filters.");
+    // Access .text property directly as per guidelines
+    const textOutput = response.text;
+
+    if (!textOutput) {
+      return res.status(500).json({ 
+        error: 'SAFETY_BLOCK', 
+        message: 'The logic engine was silenced by reality filters. Try a different flavor of nonsense.' 
+      });
     }
 
-    const jsonStr = response.text.trim();
-    const data = JSON.parse(jsonStr);
+    const data = JSON.parse(textOutput.trim());
     res.status(200).json(data);
   } catch (error: any) {
     console.error("Gemini Backend Error:", error);
     res.status(500).json({ 
       error: 'GENERATION_FAILED',
-      message: error.message || 'Failed to generate response' 
+      message: error.message || 'The logic engine encountered a cosmic error.' 
     });
   }
 }
